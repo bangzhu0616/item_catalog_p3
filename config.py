@@ -1,0 +1,5 @@
+SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
+SQLALCHEMY_TRACK_MODIFICATIONS = True
+
+STATIC_FOLDER = 'static'
+TEMPLATE_FOLDER = 'template'
