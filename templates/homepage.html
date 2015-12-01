@@ -8,7 +8,7 @@
             <table>
                 {% for cat in categories %}
                     <tr>
-                        <td><a href="#">{{cat.name}}<a></td>
+                        <td><a href="{{url_for('cat_items', cat_name=cat.name)}}">{{cat.name}}<a></td>
                     </tr>
                 {% endfor %}
             </table>
@@ -16,13 +16,13 @@
     </div>
     
     <div>
-        <h2>Latest Items</h2>
+        <h2>{{cat_name}} Items {{item_count}}</h2>
 
         <div>
             <table>
-                {% for item in latest_items %}
+                {% for item in items %}
                     <tr>
-                        <td><a href="#">{{item.name}}</a> ({{item.get_cat_name()}})</td>
+                        <td><a href="{{url_for('show_item', cat_name=item.get_cat_name(), item_name=item.name)}}">{{item.name}}</a> ({{item.get_cat_name()}})</td>
                     <tr>
                 {% endfor %}
             </table>

@@ -1,14 +1,12 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h2> Add Item </h2>
+    <h2> Add Category </h2>
     <div>
         {% from "_formhelpers.html" import render_field %}
-        <form method=post action="/items">
+        <form method=post action="/cats">
             <dl>
                 {{ render_field(form.name) }}
-                {{ render_field(form.description) }}
-                {{ render_field(form.cat) }}
             </dl>
             <p><input type=submit value=Add>
         </form>

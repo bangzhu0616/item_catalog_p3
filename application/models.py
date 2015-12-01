@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, func, ForeignKeyConstraint, create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import object_session
 
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -8,13 +7,11 @@ from application import app, db
 
 import os
 
-Base = declarative_base()
-
-class Categories(Base):
+class Categories(db.Model):
     __tablename__ = 'categories'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(80), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(80), nullable=False)
 
     @property
     def serialize(self):
@@ -23,14 +20,14 @@ class Categories(Base):
             'name'  : self.name,
         }
 
-class Items(Base):
+class Items(db.Model):
     __tablename__ = 'items'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(80), nullable=False)
-    description = Column(String)
-    create_at = Column(DateTime, default=func.now())
-    cat = Column(Integer, nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(80), nullable=False)
+    description = db.Column(db.String)
+    create_at = db.Column(db.DateTime, default=func.now())
+    cat = db.Column(db.Integer, nullable=False)
     category = relationship(Categories)
 
     __table_args__ = (
@@ -42,7 +39,7 @@ class Items(Base):
 
     def get_cat_name(self):
         session = object_session(self)
-        category = session.query(Items).filter_by(id=self.cat).one()
+        category = session.query(Categories).filter_by(id=self.cat).one()
         return category.name
 
     @property
@@ -57,28 +54,18 @@ class Items(Base):
             }
         }
 
-class Accounts(Base):
+class Accounts(db.Model):
     __tablename__ = 'accounts'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    username = Column(String(100), nullable = False)
-    password_hash = Column(String(250))
-    email = Column(String(100))
-    create_at = Column(DateTime, default=func.now())
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(100), nullable = False)
+    password_hash = db.Column(db.String(250))
+    email = db.Column(db.String(100))
+    create_at = db.Column(db.DateTime, default=func.now())
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
-engine = create_engine(app.config.get('SQLALCHEMY_DATABASE_URI'))
-
-if not os.path.exists('./database.db'):
-    Base.metadata.create_all(engine)
-
-Base.metadata.bind = engine
-
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
 
