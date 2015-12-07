@@ -4,13 +4,28 @@
     <h2> Add Item </h2>
     <div>
         {% from "_formhelpers.html" import render_field %}
-        <form method=post action="/items">
+        <form method=post>
             <dl>
                 {{ render_field(form.name) }}
                 {{ render_field(form.description) }}
-                {{ render_field(form.cat) }}
+                <td>Category</td><br/>
+                <td>
+                    <select id="category" name="category">
+                        {% for cat in categories %}
+                            {% if cat.name == current_cat %}
+                                <option selected value="{{cat.name}}">{{cat.name}}</option>  
+                            {% else %} 
+                                <option value="{{cat.name}}">{{cat.name}}</option>  
+                            {% endif %}             
+                        {% endfor %}
+                    </select>
+                </td>
             </dl>
-            <p><input type=submit value=Add>
+            {% if new_item %}
+                <input type=submit value=Add>
+            {% else %}
+                <input type=submit value=Edit>
+            {% endif %}
         </form>
     </div>
 {% endblock %}

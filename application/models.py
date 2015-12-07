@@ -3,15 +3,17 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import object_session
 
 from werkzeug.security import generate_password_hash, check_password_hash
-from application import app, db
+from application import app
 
-import os
+from sqlalchemy.ext.declarative import declarative_base
 
-class Categories(db.Model):
+Base = declarative_base()
+
+class Categories(Base):
     __tablename__ = 'categories'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(80), nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(80), nullable=False)
 
     @property
     def serialize(self):
@@ -20,14 +22,14 @@ class Categories(db.Model):
             'name'  : self.name,
         }
 
-class Items(db.Model):
+class Items(Base):
     __tablename__ = 'items'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(80), nullable=False)
-    description = db.Column(db.String)
-    create_at = db.Column(db.DateTime, default=func.now())
-    cat = db.Column(db.Integer, nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(80), nullable=False)
+    description = Column(String)
+    create_at = Column(DateTime, default=func.now())
+    cat = Column(Integer, nullable=False)
     category = relationship(Categories)
 
     __table_args__ = (
@@ -54,18 +56,17 @@ class Items(db.Model):
             }
         }
 
-class Accounts(db.Model):
+class Accounts(Base):
     __tablename__ = 'accounts'
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(100), nullable = False)
-    password_hash = db.Column(db.String(250))
-    email = db.Column(db.String(100))
-    create_at = db.Column(db.DateTime, default=func.now())
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(100), nullable = False)
+    password_hash = Column(String(250))
+    email = Column(String(100))
+    create_at = Column(DateTime, default=func.now())
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-
