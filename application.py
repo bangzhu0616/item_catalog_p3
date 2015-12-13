@@ -20,6 +20,8 @@ app.add_url_rule('/catalog/<path:cat_name>/<path:item_name>', view_func=show_ite
 app.add_url_rule('/catalog/<path:cat_name>/<path:item_name>/delete', view_func=del_item, methods=['GET', 'POST'])
 app.add_url_rule('/catalog/<path:cat_name>/<path:item_name>/edit', view_func=edit_item, methods=['GET', 'POST'])
 
+app.add_url_rule('/catalog.json', view_func=catalog_api)
+
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8000)

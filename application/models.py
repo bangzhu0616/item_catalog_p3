@@ -14,12 +14,28 @@ class Categories(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(80), nullable=False)
+    account = Column(Integer)
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['account'], 
+            ['accounts.id']
+        ),
+    )
+
+    def get_items(self):
+        session = object_session(self)
+        items = session.query(Items).filter_by(cat=self.id).all()
+        return items
 
     @property
     def serialize(self):
+        items = self.get_items()
         return {
             'id'    : self.id,
             'name'  : self.name,
+            'item_count': len(items),
+            'Item'  : [i.serialize_cat for i in items]
         }
 
 class Items(Base):
@@ -52,8 +68,17 @@ class Items(Base):
             'description'   : self.description,
             'categroy'  : {
                 'id'    : self.cat,
-                'name'  : self.get_cat_name,
+                'name'  : self.get_cat_name(),
             }
+        }
+
+    @property
+    def serialize_cat(self):
+        return {
+            'id': self.id,
+            'title': self.name,
+            'description': self.description,
+            'cat_id': self.cat
         }
 
 class Accounts(Base):

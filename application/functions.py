@@ -1,4 +1,4 @@
-from flask import render_template, redirect, request
+from flask import render_template, redirect, request, jsonify
 from application import app, db
 from application.models import Base, Categories, Items, Accounts
 from application.forms import ItemForm, CatForm
@@ -54,7 +54,7 @@ def cat_items(cat_name):
                             categories = categories,
                             items = items,
                             cat_name = cat_name,
-                            item_count = str(count)+' items')
+                            item_count = '('+str(count)+' items)')
 
 def show_item(cat_name, item_name):
     cat = session.query(Categories).filter_by(name=cat_name).one()
@@ -92,4 +92,8 @@ def edit_item(cat_name, item_name):
         session.commit()
         print '/catalog/%s/%s' %(cat_name, item_name)
         return redirect('/catalog/%s/%s' %(cat_name, item_name) )
+
+def catalog_api():
+    cats = session.query(Categories).all()
+    return jsonify(Categories_Count=len(cats), Categories=[i.serialize for i in cats])
 
