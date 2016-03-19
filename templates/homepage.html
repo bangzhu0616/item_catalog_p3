@@ -2,6 +2,9 @@
 
 {% block content %}
     <div>
+        {%if login %}
+            <a href="/cats">Add Catalog</a>
+        {% endif %}
         <h2>Categories</h2>
 
         <div class="categories">
@@ -16,6 +19,9 @@
     </div>
     
     <div>
+        {%if login %}
+            <a href="/items">Add Item</a>
+        {% endif %}
         <h2>{{cat_name}} Items {{item_count}}</h2>
 
         <div>

@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Item Catalog</title>
+        <title>Catalog App</title>
     </head>
 
     <body>
+        <header>
+            <a class="logo" href="/">Catalog App</a>
+            {%if login %}
+                <a class="log" href="/logout">Logout</a>
+            {% else %}
+                <a class="log" href="/login">Login</a>
+            {% endif %}
+        </header>
         {% block content %}
         {% endblock %}
     </body>

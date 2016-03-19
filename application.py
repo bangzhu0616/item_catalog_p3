@@ -22,6 +22,12 @@ app.add_url_rule('/catalog/<path:cat_name>/<path:item_name>/edit', view_func=edi
 
 app.add_url_rule('/catalog.json', view_func=catalog_api)
 
+app.add_url_rule('/login', view_func=login)
+app.add_url_rule('/gconnect', view_func=gconnect, methods=['POST'])
+app.add_url_rule('/logout', view_func=logout)
+app.add_url_rule('/gdisconnect', view_func=gdisconnect)
+app.add_url_rule('/signup', view_func=signup)
+
 if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8000)

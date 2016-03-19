@@ -13,15 +13,7 @@ class Categories(Base):
     __tablename__ = 'categories'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(80), nullable=False)
-    account = Column(Integer)
-
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ['account'], 
-            ['accounts.id']
-        ),
-    )
+    name = Column(String(80), nullable=False, unique=True)
 
     def get_items(self):
         session = object_session(self)
@@ -35,7 +27,7 @@ class Categories(Base):
             'id'    : self.id,
             'name'  : self.name,
             'item_count': len(items),
-            'Item'  : [i.serialize_cat for i in items]
+            'Item'  : [i.serialize_cat for i in items],
         }
 
 class Items(Base):
@@ -47,11 +39,16 @@ class Items(Base):
     create_at = Column(DateTime, default=func.now())
     cat = Column(Integer, nullable=False)
     category = relationship(Categories)
+    account = Column(Integer)
 
     __table_args__ = (
         ForeignKeyConstraint(
             ['cat'], 
             ['categories.id']
+        ),
+        ForeignKeyConstraint(
+            ['account'],
+            ['accounts.id']
         ),
     )
 
@@ -66,6 +63,7 @@ class Items(Base):
             'id'    : self.id,
             'name'  : self.name,
             'description'   : self.description,
+            'account': self.account,
             'categroy'  : {
                 'id'    : self.cat,
                 'name'  : self.get_cat_name(),
@@ -78,7 +76,8 @@ class Items(Base):
             'id': self.id,
             'title': self.name,
             'description': self.description,
-            'cat_id': self.cat
+            'cat_id': self.cat,
+            'account': self.account,
         }
 
 class Accounts(Base):
