@@ -6,7 +6,7 @@ This is project 3 of Udacity Full-stack Nanodegree.
 
 1. Install virtualenv. (https://virtualenv.pypa.io/en/latest/installation.html)
 2. Run virtualenv in this dictionary
-3. Install requirements. (>pip install requirements.txt)
+3. Install requirements. (>pip install -r requirements.txt)
 4. Open http://127.0.0.1:8000 in browser
 
 ## Usage
