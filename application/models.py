@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, DateTime, func, ForeignKeyConstraint, create_engine
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKeyConstraint
+from sqlalchemy import func, create_engine
 from sqlalchemy.orm import relationship
 from sqlalchemy.orm.session import object_session
 
@@ -14,6 +15,14 @@ class Categories(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(80), nullable=False, unique=True)
+    account = Column(Integer)
+
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ['account'],
+            ['accounts.id']
+        ),
+    )
 
     def get_items(self):
         session = object_session(self)
@@ -25,6 +34,7 @@ class Categories(Base):
         items = self.get_items()
         return {
             'id'    : self.id,
+            'account_id': self.account,
             'name'  : self.name,
             'item_count': len(items),
             'Item'  : [i.serialize_cat for i in items],
@@ -43,7 +53,7 @@ class Items(Base):
 
     __table_args__ = (
         ForeignKeyConstraint(
-            ['cat'], 
+            ['cat'],
             ['categories.id']
         ),
         ForeignKeyConstraint(
@@ -63,7 +73,7 @@ class Items(Base):
             'id'    : self.id,
             'name'  : self.name,
             'description'   : self.description,
-            'account': self.account,
+            'account_id': self.account,
             'categroy'  : {
                 'id'    : self.cat,
                 'name'  : self.get_cat_name(),
@@ -85,12 +95,12 @@ class Accounts(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(100), nullable = False)
-    password_hash = Column(String(250))
+    # password_hash = Column(String(250))
     email = Column(String(100))
     create_at = Column(DateTime, default=func.now())
 
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+    # def set_password(self, password):
+    #     self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+    # def check_password(self, password):
+    #     return check_password_hash(self.password_hash, password)

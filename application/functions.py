@@ -99,135 +99,188 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
+    # see if user exists, if it doesn't make a new one
+    user_id = get_user_id(login_session['email'])
+    if user_id:
+        login_session['user_id'] = user_id
+    else:
+        user_id = create_user(login_session)
+        login_session['user_id'] = user_id
+
     output = ''
     output += '<h1>Welcome, '
     output += login_session['username']
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: \
+        150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
     return output
 
 def logout():
-    pass
+    return redirect('/gdisconnect')
 
 def gdisconnect():
     access_token = login_session['access_token']
-    print 'In gdisconnect access token is %s', access_token
-    print 'User name is: ' 
-    print login_session['username']
     if access_token is None:
         print 'Access Token is None'
         response = make_response(json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' \
+            % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
-    print 'result is '
-    print result
     if result['status'] == '200':
-        del login_session['access_token'] 
+        del login_session['access_token']
         del login_session['gplus_id']
         del login_session['username']
         del login_session['email']
         del login_session['picture']
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
-        response.headers['Content-Type'] = 'application/json'
-        return response
+        flash("Successfully Logout! Redirecting to front page.")
+        return redirect('/')
     else:
-    
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
-        response.headers['Content-Type'] = 'application/json'
-        return response
+        flash("Fail to Logout! Redirecting to front page.")
+        return redirect('/')
+
 
 def signup():
-    pass
+    return redirect('/login')
+
+def get_user_info():
+    user = session.query(Accounts).filter_by(id=user_id).one()
+    return user
+
+def get_user_id(email):
+    try:
+        user = session.query(Accounts).filter_by(email=email).one()
+        return user.id
+    except:
+        return None
+
+def create_user(login_session):
+    new_user = Accounts(username=login_session['username'], email=login_session['email'])
+    session.add(new_user)
+    session.commit()
+    user = session.query(Accounts).filter_by(email=login_session['email']).one()
+    return user.id
 
 def list_cat_items():
-    categories = session.query(Categories).all()
-    latest_items = session.query(Items).order_by(Items.create_at.desc()).limit(10).all()
-    return render_template('homepage.html', 
-                            categories = categories, 
-                            items = latest_items,
-                            cat_name = 'Latest')
+    if 'username' not in login_session:
+        return redirect('/login')
+    else:
+        user_id = login_session['user_id']
+        categories = session.query(Categories).filter_by(account=user_id).all()
+        latest_items = session.query(Items).filter_by(account=user_id) \
+                    .order_by(Items.create_at.desc()).limit(10).all()
+        login = True
+        return render_template('homepage.html',
+                                categories = categories,
+                                items = latest_items,
+                                cat_name = 'Latest',
+                                login = login)
 
 def add_a_cat():
-    form = CatForm(request.form)
-    if request.method == 'GET':
-        return render_template('addcat.html', form=form)
-    if request.method == 'POST' and form.validate():
-        new_cat = Categories(name=form.name.data)
-        session.add(new_cat)
-        session.commit()
-        return redirect('/')
+    if 'username' not in login_session:
+        return redirect('/login')
+    else:
+        form = CatForm(request.form)
+        if request.method == 'GET':
+            return render_template('addcat.html', form=form, login=True)
+        if request.method == 'POST' and form.validate():
+            new_cat = Categories(name=form.name.data, account=login_session['user_id'])
+            session.add(new_cat)
+            session.commit()
+            return redirect('/')
 
 def add_an_item():
-    form = ItemForm(request.form)
-    if request.method == 'GET':
-        cats = session.query(Categories).all()
-        return render_template('additem.html', form=form, current_cat='', categories=cats, new_item=True)
-    if request.method == 'POST' and form.validate():
-        cat_name = request.form['category']
-        cat_id = session.query(Categories).filter_by(name=cat_name).one().id
-        new_item = Items(name=form.name.data,
-                        description=form.description.data,
-                        cat=cat_id)
-        session.add(new_item)
-        session.commit()
-        return redirect('/')
+    if 'username' not in login_session:
+        return redirect('/login')
+    else:
+        user_id = login_session['user_id']
+        form = ItemForm(request.form)
+        if request.method == 'GET':
+            cats = session.query(Categories).filter_by(account=user_id).all()
+            return render_template('additem.html', form=form, current_cat='', categories=cats, new_item=True, login=True)
+        if request.method == 'POST' and form.validate():
+            cat_name = request.form['category']
+            cat = session.query(Categories).filter_by(name=cat_name, account=user_id).one()
+            new_item = Items(name=form.name.data,
+                            description=form.description.data,
+                            cat=cat.id,
+                            account=cat.account)
+            session.add(new_item)
+            session.commit()
+            return redirect('/')
 
 def cat_items(cat_name):
-    categories = session.query(Categories).all()
-    cat_id = session.query(Categories).filter_by(name=cat_name).one().id
-    items = session.query(Items).filter_by(cat=cat_id).order_by(Items.create_at.desc()).all()
-    count = len(items)
-    return render_template('homepage.html',
-                            categories = categories,
-                            items = items,
-                            cat_name = cat_name,
-                            item_count = '('+str(count)+' items)')
+    if 'username' not in login_session:
+        return redirect('/login')
+    else:
+        user_id = login_session['user_id']
+        categories = session.query(Categories).filter_by(account=user_id).all()
+        cat_id = session.query(Categories).filter_by(name=cat_name, account=user_id).one().id
+        items = session.query(Items).filter_by(cat=cat_id).order_by(Items.create_at.desc()).all()
+        count = len(items)
+        return render_template('homepage.html',
+                                categories = categories,
+                                items = items,
+                                cat_name = cat_name,
+                                item_count = '('+str(count)+' items)',
+                                login=True)
 
 def show_item(cat_name, item_name):
-    cat = session.query(Categories).filter_by(name=cat_name).one()
-    cat_id = cat.id
-    item = session.query(Items).filter_by(name=item_name, cat=cat_id).one()
-    return render_template('item.html', item=item)
+    if 'username' not in login_session:
+        return redirect('/login')
+    else:
+        user_id = login_session['user_id']
+        cat = session.query(Categories).filter_by(name=cat_name, account=user_id).one()
+        cat_id = cat.id
+        item = session.query(Items).filter_by(name=item_name, cat=cat_id, account=user_id).one()
+        return render_template('item.html', item=item, login=True)
 
 def del_item(cat_name, item_name):
-    if request.method == 'GET':
-        return render_template('deleteitem.html')
-    if request.method == 'POST':
-        cat = session.query(Categories).filter_by(name=cat_name).one()
-        cat_id = cat.id
-        item = session.query(Items).filter_by(name=item_name, cat=cat_id).one()
-        session.delete(item)
-        session.commit()
-        return redirect('/catalog/%s/items' % cat_name)
+    if 'username' not in login_session:
+        return redirect('/login')
+    else:
+        user_id = login_session['user_id']
+        if request.method == 'GET':
+            return render_template('deleteitem.html', login=True)
+        if request.method == 'POST':
+            cat = session.query(Categories).filter_by(name=cat_name, account=user_id).one()
+            cat_id = cat.id
+            item = session.query(Items).filter_by(name=item_name, cat=cat_id, account=user_id).one()
+            session.delete(item)
+            session.commit()
+            return redirect('/catalog/%s/items' % cat_name)
 
 def edit_item(cat_name, item_name):
-    cat = session.query(Categories).filter_by(name=cat_name).one()
-    cat_id = cat.id
-    item = session.query(Items).filter_by(name=item_name, cat=cat_id).one()
-    if request.method == 'GET':
-        form = ItemForm(name=item.name, description=item.description)
-        cats = session.query(Categories).all()
-        return render_template('additem.html', form=form, current_cat=cat_name, categories=cats, new_item=False)
-    if request.method == 'POST':
-        form = ItemForm(request.form)
-        cat_name = request.form['category']
-        cat_id = session.query(Categories).filter_by(name=cat_name).one().id
-        item.name = form.name.data
-        item.description = form.description.data
-        item.cat = cat_id
-        session.add(item)
-        session.commit()
-        print '/catalog/%s/%s' %(cat_name, item_name)
-        return redirect('/catalog/%s/%s' %(cat_name, item_name) )
+    if 'username' not in login_session:
+        return redirect('/login')
+    else:
+        user_id = login_session['user_id']
+        cat = session.query(Categories).filter_by(name=cat_name, account=user_id).one()
+        cat_id = cat.id
+        item = session.query(Items).filter_by(name=item_name, cat=cat_id, account=user_id).one()
+        if request.method == 'GET':
+            form = ItemForm(name=item.name, description=item.description)
+            cats = session.query(Categories).all()
+            return render_template('additem.html', form=form, current_cat=cat_name, categories=cats, new_item=False, login=True)
+        if request.method == 'POST':
+            form = ItemForm(request.form)
+            cat_name = request.form['category']
+            # print cat_name, user_id
+            cat_id = session.query(Categories).filter_by(name=cat_name, account=user_id).one().id
+            item.name = form.name.data
+            item.description = form.description.data
+            item.cat = cat_id
+            session.add(item)
+            session.commit()
+            # print '/catalog/%s/%s' %(cat_name, item_name)
+            return redirect('/catalog/%s/%s' %(cat_name, item.name))
 
 def catalog_api():
     cats = session.query(Categories).all()
     return jsonify(Categories_Count=len(cats), Categories=[i.serialize for i in cats])
-
