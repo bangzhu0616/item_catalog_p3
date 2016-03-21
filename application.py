@@ -1,3 +1,7 @@
+'''
+This file is url rule functions.
+'''
+
 from application import db, app
 from application.models import *
 from application.forms import *

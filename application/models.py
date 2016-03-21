@@ -1,3 +1,7 @@
+'''
+This file defines the classes of all database tables.
+'''
+
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKeyConstraint
 from sqlalchemy import func, create_engine
 from sqlalchemy.orm import relationship

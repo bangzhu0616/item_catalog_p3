@@ -1,3 +1,7 @@
+'''
+This file create database.
+'''
+
 from application import db, app
 from application.models import *
 

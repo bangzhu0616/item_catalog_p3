@@ -1,3 +1,7 @@
+'''
+This file includes all view functions of this application.
+'''
+
 from flask import render_template, redirect, request, jsonify, make_response, flash
 from application import app, db
 from application.models import Base, Categories, Items, Accounts
@@ -24,6 +28,7 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 def login():
+    # random generate the state
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                 for x in xrange(32))
     login_session['state'] = state
@@ -107,6 +112,7 @@ def gconnect():
         user_id = create_user(login_session)
         login_session['user_id'] = user_id
 
+    # generate the returned data
     output = ''
     output += '<h1>Welcome, '
     output += login_session['username']
@@ -116,7 +122,6 @@ def gconnect():
     output += ' " style = "width: 300px; height: 300px;border-radius: \
         150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
-    print "done!"
     return output
 
 def logout():
@@ -124,6 +129,8 @@ def logout():
 
 def gdisconnect():
     access_token = login_session['access_token']
+
+    # No access token means no user connected
     if access_token is None:
         print 'Access Token is None'
         response = make_response(json.dumps('Current user not connected.'), 401)
@@ -133,6 +140,8 @@ def gdisconnect():
             % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
+
+    # disconnect this user
     if result['status'] == '200':
         del login_session['access_token']
         del login_session['gplus_id']
@@ -145,9 +154,10 @@ def gdisconnect():
         flash("Fail to Logout! Redirecting to front page.")
         return redirect('/')
 
-
 def signup():
     return redirect('/login')
+
+# The following three functions are helper functions of user login
 
 def get_user_info():
     user = session.query(Accounts).filter_by(id=user_id).one()
@@ -167,7 +177,9 @@ def create_user(login_session):
     user = session.query(Accounts).filter_by(email=login_session['email']).one()
     return user.id
 
+# Frontpage
 def list_cat_items():
+    # user must login to access its private data
     if 'username' not in login_session:
         return redirect('/login')
     else:
@@ -175,13 +187,13 @@ def list_cat_items():
         categories = session.query(Categories).filter_by(account=user_id).all()
         latest_items = session.query(Items).filter_by(account=user_id) \
                     .order_by(Items.create_at.desc()).limit(10).all()
-        login = True
         return render_template('homepage.html',
                                 categories = categories,
                                 items = latest_items,
                                 cat_name = 'Latest',
-                                login = login)
+                                login = True)
 
+# except login page, all other pages are login required
 def add_a_cat():
     if 'username' not in login_session:
         return redirect('/login')
@@ -216,6 +228,9 @@ def add_an_item():
             return redirect('/')
 
 def cat_items(cat_name):
+    '''
+    show items of this catalog
+    '''
     if 'username' not in login_session:
         return redirect('/login')
     else:
@@ -232,6 +247,9 @@ def cat_items(cat_name):
                                 login=True)
 
 def show_item(cat_name, item_name):
+    '''
+    show description of this item
+    '''
     if 'username' not in login_session:
         return redirect('/login')
     else:
@@ -271,16 +289,15 @@ def edit_item(cat_name, item_name):
         if request.method == 'POST':
             form = ItemForm(request.form)
             cat_name = request.form['category']
-            # print cat_name, user_id
             cat_id = session.query(Categories).filter_by(name=cat_name, account=user_id).one().id
             item.name = form.name.data
             item.description = form.description.data
             item.cat = cat_id
             session.add(item)
             session.commit()
-            # print '/catalog/%s/%s' %(cat_name, item_name)
             return redirect('/catalog/%s/%s' %(cat_name, item.name))
 
+# API function
 def catalog_api():
     cats = session.query(Categories).all()
     return jsonify(Categories_Count=len(cats), Categories=[i.serialize for i in cats])
