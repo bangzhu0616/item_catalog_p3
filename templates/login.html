@@ -1,18 +1,24 @@
 <html>
 <head>
+    <title>Catalog App</title>
     <!-- LOAD PRE-REQUISITES FOR GOOGLE SIGN IN -->
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
     <script src="//apis.google.com/js/platform.js?onload=start"> </script>
 
-    <title>Catalog App</title>
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <link rel="stylesheet" href="/static/itemcat.css">
 </head>
 
 <body>
-    <div id="des">
-        This is a catalog item application. Please signin to access your private data.
+  <div class="row main_container">
+    <div class="col-md-6" id="des" >
+        <h3 class="text-center">This is a catalog item application.</h3>
+      </br>
+        <h5 class="text-center">Please signin to access your private data.</h5>
     </div>
-    
-    <div id="signInButton">
+
+    <div class="col-md-6 text-center g-button-containter" id="signInButton" >
         <span class="g-signin"
             data-scope="openid email"
             data-clientid="10860422267-hck6qrsld1ap482a5i01hnu71amu1sjm.apps.googleusercontent.com"
@@ -24,7 +30,7 @@
         </span>
     </div>
 
-    <div id="result"></div>
+    <div class="col-md-6 text-center" id="result"></div>
 
     <script>
     function signInCallback(authResult) {
@@ -32,7 +38,7 @@
             // Hide the sign-in button now that the user is authorized
             $('#signInButton').attr('style', 'display: none');
 
-            // Send the one-time code to the server, if the server responds, 
+            // Send the one-time code to the server, if the server responds,
             // write a 'login successful' message to the web page and then redirect
             // back to the main restaurants page
             $.ajax({
@@ -58,6 +64,7 @@
         }
     }
     </script>
+  </div>
 </body>
 
 </html>

@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div>
+    <div class="col-md-4">
+        <h3>Categories</h3>
         {%if login %}
             <a href="/cats">Add Catalog</a>
         {% endif %}
-        <h2>Categories</h2>
 
         <div class="categories">
             <table>
@@ -17,14 +17,14 @@
             </table>
         </div>
     </div>
-    
-    <div>
+
+    <div class="col-md-8">
+        <h3>{{cat_name}} Items {{item_count}}</h3>
         {%if login %}
             <a href="/items">Add Item</a>
         {% endif %}
-        <h2>{{cat_name}} Items {{item_count}}</h2>
 
-        <div>
+        <div class="items">
             <table>
                 {% for item in items %}
                     <tr>
